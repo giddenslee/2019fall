@@ -1,0 +1,17 @@
+<html>
+<head>
+  <title>注册</title>
+</head>
+<body>
+  {% if message %}
+  <p style="color:red">{{ message }}</p>
+  {% endif %}
+  <form action="/signup" method="post">
+    <legend>请输入</legend>
+    <p><input name="username" placeholder="用户名" value="{{ username }}"></p>
+    <p><input name="password" placeholder="密码" type="password"></p>
+    <p><input name="password2" placeholder="确认密码" type="password"></p>
+    <p><button type="submit">确认提交</button></p>
+  </form>
+</body>
+</html>
