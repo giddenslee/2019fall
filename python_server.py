@@ -16,9 +16,22 @@ def signin_form():
 def signin():
     username = request.form['username']
     password = request.form['password']
-    if r.get(username) == password.encode("utf-8"):
-        return render_template('signin-ok.html', username=username)
-    return render_template('form.html', message='用户名或密码错误', username=username)
+    if r.hget(name=username, key="password") == None:
+        return render_template('form.html', message="用户不存在，请注册", username=username)
+    elif r.hget(name=username, key="password") == password.encode("utf-8"):
+        userinfo_raw = r.hgetall(name=username)
+        keys = ["First", "Second"]
+        userinfo = {}
+        for key in keys:
+            if key.encode("utf-8") in userinfo_raw.keys():
+                print("GET ", username, " attr ", key)
+                rst = userinfo_raw[key.encode("utf-8")]
+                print(rst)
+                if (rst != None):
+                    userinfo[key] = rst.decode("utf-8")
+        return render_template('signin-ok.html', username=username, userinfo=userinfo)
+    else:
+        return render_template('form.html', message='用户名或密码错误', username=username)
 
 @app.route('/signup', methods=['GET'])
 def signup_form():
@@ -32,10 +45,10 @@ def signup():
     if (password != password2):
         return render_template('form_signup.html', message="密码不一致", username=username)
     else:
-        if r.exists(username):
+        if r.exists(username) and r.hget(name=username, key="password") != None:
             return render_template('form.html', message="该用户已存在，请使用已有密码登录", username=username)
         else:
-            r.set(username, password, nx = True)
+            r.hset(username, "password", password)
             return render_template('form.html')
 
 if __name__ == '__main__':
