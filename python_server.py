@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import redis
 from flask import Flask, request, render_template
 import json
