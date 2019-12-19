@@ -3,7 +3,12 @@
   <title>Welcome, {{ username }}</title>
 </head>
 <body>
-  <p>第一次作业成绩： {{ userinfo.First }}</p>
-  <p>第二次作业成绩： {{ userinfo.Second }}</p>
+  {% for item in user_grade_list %}
+  <p> {{ item.test_name }} : {{ item.score }}</p>
+  {% endfor %}
+  <!-- <form action="/radar" method="post">
+    <p><button type="submit" >查看学习雷达图</button></p>
+    <input type="hidden" name="UserID" value = "{{ username }}" />
+  </form> -->
 </body>
 </html>

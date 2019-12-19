@@ -1,5 +1,6 @@
 import redis
 from flask import Flask, request, render_template
+import json
 r = redis.Redis(host="localhost", port=6379, db=0)
 
 app = Flask(__name__)
@@ -19,17 +20,19 @@ def signin():
     if r.hget(name=username, key="password") == None:
         return render_template('form.html', message="用户不存在，请注册", username=username)
     elif r.hget(name=username, key="password") == password.encode("utf-8"):
-        userinfo_raw = r.hgetall(name=username)
-        keys = ["First", "Second"]
-        userinfo = {}
-        for key in keys:
-            if key.encode("utf-8") in userinfo_raw.keys():
-                print("GET ", username, " attr ", key)
-                rst = userinfo_raw[key.encode("utf-8")]
-                print(rst)
-                if (rst != None):
-                    userinfo[key] = rst.decode("utf-8")
-        return render_template('signin-ok.html', username=username, userinfo=userinfo)
+        # Kuuga Agito Ryuki Faiz Blade Hibiki Kabuto DenO kiva Decade W OOOs Fourze Wizard Gaim Drive Ghost Ex-aid Build
+        user_info = r.hgetall(username)
+        test_info = r.hgetall("test_name")
+        print("user_info: ", user_info)
+        print("test_info: ", test_info)
+        user_grade_list = []
+
+        for i in range(len(test_info.keys())):
+            name = test_info["test_{0}".format(i+1).encode("utf-8")].decode("utf-8")
+            score = user_info["test_{0}".format(i+1).encode("utf-8")].decode("utf-8")
+            user_grade_list.append({"test_name": name, "score": score})
+
+        return render_template('signin-ok.html',  username=username, user_grade_list = user_grade_list)
     else:
         return render_template('form.html', message='用户名或密码错误', username=username)
 
@@ -50,6 +53,30 @@ def signup():
         else:
             r.hset(username, "password", password)
             return render_template('form.html')
+
+@app.route('/radar', methods = ['POST'])
+def generate_radar():
+    username = request.form['UserID']
+    info = r.hget("radar_info", username)
+    if (info != None):
+        return render_template('radar.html', obj={"name":username, "data":info})
+    else:
+        return render_template('radar_error.html')
+
+# @app.route('/test', methods = ['GET'])
+# def template_test():
+#     user_name = "181830158"
+#     user_info = r.hgetall(user_name)
+#     test_info = r.hgetall("test_name")
+#     print("user_info: ", user_info)
+#     print("test_info: ", test_info)
+#     user_grade_list = []
+
+#     for i in range(len(test_info.keys())):
+#         name = test_info["test_{0}".format(i+1).encode("utf-8")].decode("utf-8")
+#         score = user_info["test_{0}".format(i+1).encode("utf-8")].decode("utf-8")
+#         user_grade_list.append({"test_name": name, "score": score})
+#     return render_template('signin-ok.html',  username=user_name, user_grade_list = user_grade_list)
 
 if __name__ == '__main__':
     app.run(port=5012)
