@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 import xlrd
@@ -22,7 +21,7 @@ def update_redis(new_dict, test_name):
     '''
     for key in new_dict.keys():
         r.hset(key, test_name, new_dict[key]) # insert { key: {test_name: new_dict[key]} }
-        # print(r.hget(key, test_name))
+        print(key, test_name, new_dict[key])
 
 def new_dict_to_redis(dict_name, new_dict):
     r.hmset(dict_name, new_dict)
@@ -93,6 +92,48 @@ def xlsx_into_redis():
         print(grade_dicts_list[i])
         update_redis(grade_dicts_list[i], test_identifier[i])
 
+def xlsx_into_redis_medic():
+    data = xlrd.open_workbook('test_data/grades_medic.xlsx').sheet_by_index(0)
+    header = data.row_values(2)
+    idx = [i for i in range(len(header))]
+    test_name = header[2:11]
+    print("test_name: ", test_name)
+    name_to_name = get_new_dict(data, "学号", "学号")
+    for key in name_to_name.keys():
+        if (len(key) >= 6):
+            name_to_name[key] = key[-6:]
+        else:
+            name_to_name[key] = key
+    # 初始化：用学号后6位作为用户名：密码
+    update_redis(name_to_name, "password")  # name_to_name: key->password, 
+
+    # grade_dicts_list = [{}] * len(test_name)  # Note: Wrong, in this form, all {}s are the same
+    grade_dicts_list = []
+    for i in range(len(test_name)):
+        grade_dicts_list.append({})
+    
+    flag = True
+    for i in range(3, data.nrows):
+        line = data.row_values(i)
+        uid = str(int(line[0]))
+        for j in range(2, len(line)):
+            grade_dicts_list[j-2][uid] = line[j]        # {uid -> score}
+        if (flag):
+            print(grade_dicts_list)
+        flag = False
+
+    test_num_to_name = {}
+    for i in range(len(test_name)):
+        test_num_to_name["test_{0}".format(i+1)] = test_name[i]
+
+    r.hmset("test_name", test_num_to_name)
+    test_identifier = ["test_{0}".format(i+1) for i in range(len(test_name))]
+    # print(test_identifier)
+
+    for i in range(len(test_name)):
+        print(grade_dicts_list[i])
+        update_redis(grade_dicts_list[i], test_identifier[i])
+
 def generate_student_dict():
     # get radar info
     path = os.curdir + r"/templates/students profiles.html"
@@ -111,6 +152,7 @@ def test_redis():
     print(r.hget("radar_info", "181830158"))
 
 if __name__ == "__main__":
+    xlsx_into_redis_medic()
     xlsx_into_redis()
     generate_student_dict()
     test_redis()
